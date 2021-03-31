@@ -81,7 +81,7 @@
         "guzzlehttp/psr7": "^1.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.0",
+        "phpunit/phpunit": "^9.0",
         "mockery/mockery": "^1.0",
         "laminas/laminas-test": "dev-php8"
     },
