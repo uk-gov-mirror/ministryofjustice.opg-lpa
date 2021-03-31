@@ -168,10 +168,6 @@ class DetailsTest extends AbstractEmailServiceTest
         $this->assertEquals('test response', $result);
     }
 
-    /**
-     * @expectedException RuntimeException
-     * @expectedExceptionMessage Unable to save details
-     */
     public function testUpdateAllInvalidData() : void
     {
         $this->setUpIdentity(2, 1, 1, 0);
@@ -183,6 +179,9 @@ class DetailsTest extends AbstractEmailServiceTest
         $result = $this->service->updateAllDetails(['id' => '123']);
 
         $this->assertEquals('test response', $result);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unable to save details');
     }
 
     public function testRequestEmailUpdate() : void
