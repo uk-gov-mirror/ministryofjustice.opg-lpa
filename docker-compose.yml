@@ -108,8 +108,11 @@ services:
       OPG_LPA_COMMON_ADMIN_ACCOUNTS: "${OPG_LPA_COMMON_ADMIN_ACCOUNTS}"
 
       OPG_LPA_OS_PLACES_HUB_ENDPOINT : "https://api.os.uk/search/places/v1/postcode"
+
   front-composer:
-    image: composer:latest
+    build:
+      context: ./
+      dockerfile: composer/Dockerfile
     volumes:
       - ./service-front:/app
     command:
@@ -118,7 +121,6 @@ services:
       - --no-interaction
       - --no-scripts
       - --optimize-autoloader
-      - --ignore-platform-reqs
 
   front-ssl:
     container_name: lpa-front-ssl
