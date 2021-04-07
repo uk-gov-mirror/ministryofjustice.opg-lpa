@@ -137,6 +137,7 @@ class ControllerAbstractFactory implements AbstractFactoryInterface
         $sessionManager = $container->get('SessionManager');
         $authenticationService = $container->get('AuthenticationService');
         $config = $container->get('Config');
+        $pageHistoryStorage = $container->get('PageHistoryStorage');
 
         $route = $container->get('Application')->getMvcEvent()->getRouteMatch();
 
@@ -163,7 +164,8 @@ class ControllerAbstractFactory implements AbstractFactoryInterface
                     $lpaApplicationService,
                     $userService,
                     $container->get('ReplacementAttorneyCleanup'),
-                    $container->get('Metadata')
+                    $container->get('Metadata'),
+                    $pageHistoryStorage
                 );
             } else {
                 $controller = new $controllerName(
@@ -173,7 +175,8 @@ class ControllerAbstractFactory implements AbstractFactoryInterface
                     $config,
                     $userDetailsSession,
                     $lpaApplicationService,
-                    $userService
+                    $userService,
+                    $pageHistoryStorage
                 );
             }
         } else {
@@ -181,7 +184,8 @@ class ControllerAbstractFactory implements AbstractFactoryInterface
                 $formElementManager,
                 $sessionManager,
                 $authenticationService,
-                $config
+                $config,
+                $pageHistoryStorage
             );
         }
 

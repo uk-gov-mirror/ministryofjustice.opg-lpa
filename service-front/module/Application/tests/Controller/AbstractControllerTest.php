@@ -13,6 +13,7 @@ use Application\Model\Service\Authentication\Identity\User as UserIdentity;
 use Application\Model\Service\Lpa\Application as LpaApplicationService;
 use Application\Model\Service\Lpa\Metadata;
 use Application\Model\Service\Lpa\ReplacementAttorneyCleanup;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\SessionManager;
 use Application\Model\Service\User\Details;
 use ApplicationTest\Controller\Authenticated\Lpa\CertificateProviderControllerTest;
@@ -276,6 +277,8 @@ abstract class AbstractControllerTest extends MockeryTestCase
         $this->apiClient = Mockery::mock(Client::class);
 
         $this->router = Mockery::mock(RouteStackInterface::class);
+
+        $this->pageHistoryStorage = Mockery::mock(PageHistoryStorage::class);
     }
 
     /**
@@ -330,7 +333,8 @@ abstract class AbstractControllerTest extends MockeryTestCase
                     $this->lpaApplicationService,
                     $this->userDetails,
                     $this->replacementAttorneyCleanup,
-                    $this->metadata
+                    $this->metadata,
+                    $this->pageHistoryStorage
                 );
             } else {
                 $controller = new $controllerName(
@@ -340,7 +344,8 @@ abstract class AbstractControllerTest extends MockeryTestCase
                     $this->config,
                     $this->userDetailsSession,
                     $this->lpaApplicationService,
-                    $this->userDetails
+                    $this->userDetails,
+                    $this->pageHistoryStorage
                 );
             }
         } else {
@@ -348,7 +353,8 @@ abstract class AbstractControllerTest extends MockeryTestCase
                 $this->formElementManager,
                 $this->sessionManager,
                 $this->authenticationService,
-                $this->config
+                $this->config,
+                $this->pageHistoryStorage
             );
         }
 

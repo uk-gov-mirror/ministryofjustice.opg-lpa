@@ -5,6 +5,7 @@ namespace Application\Controller;
 use Application\Model\Service\Authentication\AuthenticationService;
 use Application\Model\Service\Authentication\Identity\User as Identity;
 use Application\Model\Service\Lpa\Application as LpaApplicationService;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\SessionManager;
 use Application\Model\Service\User\Details as UserService;
 use Opg\Lpa\DataModel\User\User;
@@ -49,6 +50,7 @@ abstract class AbstractAuthenticatedController extends AbstractBaseController
      */
     private $userService;
 
+
     /**
      * AbstractAuthenticatedController constructor
      *
@@ -59,6 +61,7 @@ abstract class AbstractAuthenticatedController extends AbstractBaseController
      * @param Container $userDetailsSession
      * @param LpaApplicationService $lpaApplicationService
      * @param UserService $userService
+     * @param PageHistoryStorage $pageHistoryStorage
      */
     public function __construct(
         AbstractPluginManager $formElementManager,
@@ -67,9 +70,10 @@ abstract class AbstractAuthenticatedController extends AbstractBaseController
         array $config,
         Container $userDetailsSession,
         LpaApplicationService $lpaApplicationService,
-        UserService $userService
+        UserService $userService,
+        PageHistoryStorage $pageHistoryStorage
     ) {
-        parent::__construct($formElementManager, $sessionManager, $authenticationService, $config);
+        parent::__construct($formElementManager, $sessionManager, $authenticationService, $config, $pageHistoryStorage);
 
         $this->lpaApplicationService = $lpaApplicationService;
         $this->userService = $userService;

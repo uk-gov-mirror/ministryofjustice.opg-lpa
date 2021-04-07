@@ -1,5 +1,5 @@
 <?php
-namespace Application\View\Helper;
+namespace Application\Model\Service\Session;
 
 /**
  * Class for storing page history, but only enough to enable us to return
@@ -14,10 +14,20 @@ class PageHistory
      *
      * @param array $history History of pages visited; typically this
      * class is instantiated from session data which will populate the
-     * history so far. The array will be trimmed to a maximum of two elements,
-     * and should be sorted by recency, most-recently visited first.
+     * history so far.
      */
     public function __construct(array $history = [])
+    {
+        $this->init($history);
+    }
+
+    /**
+     * Set the current history.
+     *
+     * @param array $history This will be trimmed to a maximum of two elements,
+     * and should be sorted by recency, most-recently visited first.
+     */
+    public function init(array $history)
     {
         $this->history = array_slice($history, 0, 2);
     }
@@ -60,7 +70,7 @@ class PageHistory
      *
      * @param string $currentPath Get the previous page relative to
      * this path
-     * @return ?string Path of the previous page in the history stack
+     * @return ?string Path of the previous page in the history stack or null
      */
     public function getPreviousPath(string $currentPath) : ?string
     {

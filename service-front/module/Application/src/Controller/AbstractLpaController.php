@@ -7,6 +7,7 @@ use Application\Model\Service\Authentication\AuthenticationService;
 use Application\Model\Service\Lpa\Application as LpaApplicationService;
 use Application\Model\Service\Lpa\Metadata;
 use Application\Model\Service\Lpa\ReplacementAttorneyCleanup;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\SessionManager;
 use Application\Model\Service\User\Details as UserService;
 use Opg\Lpa\DataModel\Lpa\Lpa;
@@ -52,6 +53,7 @@ abstract class AbstractLpaController extends AbstractAuthenticatedController
      * @param UserService $userService
      * @param ReplacementAttorneyCleanup $replacementAttorneyCleanup
      * @param Metadata $metadata
+     * @param PageHistoryStorage $pageHistoryStorage
      */
     public function __construct(
         $lpaId,
@@ -63,7 +65,8 @@ abstract class AbstractLpaController extends AbstractAuthenticatedController
         LpaApplicationService $lpaApplicationService,
         UserService $userService,
         ReplacementAttorneyCleanup $replacementAttorneyCleanup,
-        Metadata $metadata
+        Metadata $metadata,
+        PageHistoryStorage $pageHistoryStorage
     ) {
         parent::__construct(
             $formElementManager,
@@ -72,7 +75,8 @@ abstract class AbstractLpaController extends AbstractAuthenticatedController
             $config,
             $userDetailsSession,
             $lpaApplicationService,
-            $userService
+            $userService,
+            $pageHistoryStorage
         );
 
         //  If there is no user identity the request will be bounced in the onDispatch function
@@ -91,7 +95,7 @@ abstract class AbstractLpaController extends AbstractAuthenticatedController
         if (($authenticated = $this->checkAuthenticated()) !== true) {
             return $authenticated;
         }
-        
+
         if (!$this->lpa instanceof Lpa) {
             //404 error returned as either the LPA does not exist in the database, or is not associated with the user
             return $this->notFoundAction();
@@ -245,5 +249,5 @@ abstract class AbstractLpaController extends AbstractAuthenticatedController
     {
         return $this->metadata;
     }
-    
+
 }

@@ -7,6 +7,7 @@ use Application\Form\AbstractCsrfForm;
 use Application\Model\Service\ApiClient\Exception\ApiException;
 use Application\Model\Service\Authentication\Adapter\LpaAuthAdapter;
 use Application\Model\Service\Authentication\Identity\User as Identity;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\PersistentSessionDetails;
 use Application\Model\Service\System\DynamoCronLock;
 use Alphagov\Pay\Client as GovPayClient;
@@ -212,6 +213,10 @@ class Module implements FormElementProviderInterface
                         'apiKey'        => $config['key'],
                         'httpClient'    => $sm->get('HttpClient'),
                     ]);
+                },
+
+                'PageHistoryStorage' => function (ServiceLocatorInterface $sm) {
+                    return new PageHistoryStorage();
                 },
 
                 'TwigEmailRenderer' => function (ServiceLocatorInterface $sm) {

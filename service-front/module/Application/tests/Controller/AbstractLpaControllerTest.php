@@ -8,6 +8,7 @@ use RuntimeException;
 use Laminas\Http\Response;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Router\RouteMatch;
+use Laminas\Uri\Http as HttpUri;
 use Laminas\View\Model\ViewModel;
 
 class AbstractLpaControllerTest extends AbstractControllerTest
@@ -123,6 +124,15 @@ class AbstractLpaControllerTest extends AbstractControllerTest
         $event->shouldReceive('setResult')/*->withArgs(function ($actionResponse) {
             return $actionResponse instanceof ViewModel;
         })*/->once();
+
+        $this->request->shouldReceive('getHeaders')->withArgs(['x-requested-with'])
+            ->andReturn(FALSE);
+
+        $mockUri = Mockery::mock(HttpUri::class);
+        $this->request->shouldReceive('getUri')->andReturn($mockUri);
+
+        $this->pageHistoryStorage->shouldReceive('saveCurrentPath')
+            ->withArgs([$mockUri]);
 
         /** @var ViewModel $result */
         $result = $controller->onDispatch($event);

@@ -10,6 +10,7 @@ use Laminas\Mvc\MvcEvent;
 use Laminas\Router\RouteMatch;
 use Laminas\Session\Container;
 use Laminas\Stdlib\ArrayObject;
+use Laminas\Uri\Http as HttpUri;
 use Laminas\View\Model\ViewModel;
 
 class AbstractAuthenticatedControllerTest extends AbstractControllerTest
@@ -23,6 +24,7 @@ class AbstractAuthenticatedControllerTest extends AbstractControllerTest
         $event = new MvcEvent();
 
         $this->request->shouldReceive('getUri')->andReturn('http://localhost/home');
+
         $this->redirect->shouldReceive('toRoute')
             ->withArgs(['login', ['state'=>'timeout']])->andReturn($response)->once();
 
@@ -115,6 +117,15 @@ class AbstractAuthenticatedControllerTest extends AbstractControllerTest
         $event->shouldReceive('setResult')/*->withArgs(function ($actionResponse) {
             return $actionResponse->content === 'Placeholder page';
         })*/->once();
+
+        $this->request->shouldReceive('getHeaders')->withArgs(['x-requested-with'])
+            ->andReturn(FALSE);
+
+        $mockUri = Mockery::mock(HttpUri::class);
+        $this->request->shouldReceive('getUri')->andReturn($mockUri);
+
+        $this->pageHistoryStorage->shouldReceive('saveCurrentPath')
+            ->withArgs([$mockUri]);
 
         /** @var ViewModel $result */
         $result = $controller->onDispatch($event);

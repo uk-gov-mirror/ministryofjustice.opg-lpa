@@ -6,6 +6,7 @@ use Application\Controller\General\HomeController;
 use Application\ControllerFactory\ControllerAbstractFactory;
 use Application\Model\Service\Authentication\AuthenticationService;
 use Application\Model\Service\Lpa\Application;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\SessionManager;
 use Interop\Container\ContainerInterface;
 use Laminas\Router\RouteMatch;
@@ -74,6 +75,9 @@ class ControllerAbstractFactoryTest extends MockeryTestCase
             ->andReturn(Mockery::mock(AuthenticationService::class))->once();
 
         $this->container->shouldReceive('get')->withArgs(['Config'])->andReturn([])->once();
+
+        $this->container->shouldReceive('get')->withArgs(['PageHistoryStorage'])
+            ->andReturn(Mockery::mock(PageHistoryStorage::class))->once();
 
         $controller = $this->factory->__invoke($this->container, 'General\HomeController');
 

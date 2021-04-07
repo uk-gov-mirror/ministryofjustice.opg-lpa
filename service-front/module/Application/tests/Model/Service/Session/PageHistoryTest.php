@@ -1,8 +1,7 @@
 <?php
+namespace ApplicationTest\Model\Service\Session;
 
-namespace ApplicationTest\View\Helper;
-
-use Application\View\Helper\PageHistory;
+use Application\Model\Service\Session\PageHistory;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 
 class PageHistoryTest extends MockeryTestCase

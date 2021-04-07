@@ -3,9 +3,11 @@
 namespace Application\Controller;
 
 use Application\Model\Service\Authentication\AuthenticationService;
+use Application\Model\Service\Session\PageHistoryStorage;
 use Application\Model\Service\Session\SessionManager;
 use Application\Logging\LoggerTrait;
 use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\AbstractPluginManager;
 
 abstract class AbstractBaseController extends AbstractActionController
@@ -32,6 +34,11 @@ abstract class AbstractBaseController extends AbstractActionController
      */
     private $config;
 
+    /**
+     * @var PageHistoryStorage
+     */
+    protected $pageHistoryStorage;
+
     /**§
      * AbstractBaseController constructor.
      * @param AbstractPluginManager $formElementManager
@@ -43,12 +50,33 @@ abstract class AbstractBaseController extends AbstractActionController
         AbstractPluginManager $formElementManager,
         SessionManager $sessionManager,
         AuthenticationService $authenticationService,
-        array $config
+        array $config,
+        PageHistoryStorage $pageHistoryStorage
     ) {
         $this->formElementManager = $formElementManager;
         $this->sessionManager = $sessionManager;
         $this->authenticationService = $authenticationService;
         $this->config = $config;
+        $this->pageHistoryStorage = $pageHistoryStorage;
+    }
+
+    /**
+     * Save previous path into a cookie on every page visit.
+     *
+     * @param MvcEvent $e
+     * @return bool|mixed|\Laminas\Http\Response
+     * @throws \Exception
+     */
+    public function onDispatch(MvcEvent $e)
+    {
+        if (!$this->isAjax()) {
+            // Save the current path via the Uri object (the pageHistoryStorage
+            // object uses this to figure out a valid previous page)
+            $uri = $this->getRequest()->getUri();
+            $this->pageHistoryStorage->saveCurrentPath($uri);
+        }
+
+        return parent::onDispatch($e);
     }
 
     /**
@@ -163,5 +191,29 @@ abstract class AbstractBaseController extends AbstractActionController
     protected function config(): array
     {
         return $this->config;
+    }
+
+    /**
+     * Returns the previous path visited before reaching this controller.
+     *
+     * @return string
+     */
+    protected function getPreviousPath(): ?string
+    {
+        return $this->pageHistoryStorage->getPreviousPath();
+    }
+
+    /**
+     * Check whether the incoming request was made via Ajax
+     *
+     * @return bool
+     */
+    protected function isAjax(): bool
+    {
+        $requestedWith = $this->getRequest()->getHeaders('x-requested-with');
+        if ($requestedWith) {
+            return strtolower($requestedWith->getFieldValue()) === "xmlhttprequest";
+        }
+        return FALSE;
     }
 }
