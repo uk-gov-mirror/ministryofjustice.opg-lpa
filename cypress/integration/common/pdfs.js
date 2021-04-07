@@ -26,7 +26,9 @@ const requestUntilRefreshUrl = (href, tries) => {
             });
         }
 
-        return cy.wait(parseInt(content) * 1000).then(requestUntilRefreshUrl(href, tries));
+        return cy.wait(parseInt(content) * 1000).then(() => {
+            return requestUntilRefreshUrl(href, tries)
+        });
     });
 };
 
