@@ -27,31 +27,3 @@ Then(`I visit in new tab link named {string}`, (linkName) => {
     cy.OPGCheckA11y();
 })
 
-Then(`I request link in new tab containing {string}`, (linkText) => {
-    cy.contains(linkText)
-     .should('have.attr', 'href')
-     .then((href) => {
-         doRequest(href)
-    })
-})
-
-function doRequest(href) {
-         for (var i = 0 ; i <3000 ; i++) {
-      cy.request({
-          url: href,
-          timeout: 20000,
-        })
-      .then((response) => {
-          expect(response).to.have.property('headers')
-          //cy.log(Object.keys(response.headers));
-          cy.log(response.headers['http-equiv']);
-          //expect(response.headers['meta http-equiv']).to.contain('text/html')
-          expect(response.body).to.contain('meta http-equiv="refresh" content="2"')
-          expect(response.body).to.not.contain('meta http-equiv="refresh" content="2; url=')
-          expect(response.headers['content-type']).to.contain('text/html')
-          expect(response.body).to.have.length.gt(500)
-          })
-              cy.wait(10000);
-         }
-}
-
