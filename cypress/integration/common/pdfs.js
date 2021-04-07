@@ -1,37 +1,40 @@
 import { Then } from "cypress-cucumber-preprocessor/steps";
- 
+
+const MAX_TRIES = 100;
+
+const requestUntilRefreshUrl = (href, tries) => {
+    tries = tries || 0;
+
+    return cy.request(href).then((response) => {
+        tries += 1;
+
+        console.log(response.body);
+
+        const content = /meta http-equiv="refresh" content="([^"]+)"/.exec(response.body)[1];
+
+        if (content.includes('url')) {
+            // TODO extract the refresh URL
+            const refreshUrl = 'found refresh URL for PDF';
+
+            return new Cypress.Promise((resolve, reject) => {
+                resolve(refreshUrl);
+            });
+        }
+        else if (tries > MAX_TRIES) {
+            return new Cypress.Promise((resolve, reject) => {
+                reject('made over ' + MAX_TRIES + ' requests without success');
+            });
+        }
+
+        return cy.wait(parseInt(content) * 1000).then(requestUntilRefreshUrl(href, tries));
+    });
+};
+
 Then(`I can get {string} from link containing {string}`, (fileName, linkText) => {
-    var body = "";
-    var i = 0;
-    cy.wrap(body).as('not yet set');
-    cy.contains(linkText)
-     .should('have.attr', 'href')
-     .then((href) => {
-         //while ((i < 100) && !(body.includes('meta http-equiv="refresh" content="2; url='))) {
-         while ((i < 100) && !(body.includes('meta http-equiv="refresh" content="2; url='))) {
-              cy.request({
-                  url: href
-                })
-              .then((response) => {
-                  expect(response).to.have.property('headers')
-                  //expect(response.body).to.contain('meta http-equiv="refresh" content="2"')
-                  //expect(response.body).to.not.contain('meta http-equiv="refresh" content="2; url=')
-                  expect(response.headers['content-type']).to.contain('text/html')
-                  expect(response.body).to.have.length.gt(500)
-                  cy.wrap(body).as(response.body);
-                  body = response.body;
-                  if (body.includes('meta http-equiv="refresh" content="2; url=')) {
-                      return cypress.Promise
-                  }
-                  })
-              cy.wait(10000);
-              i++;
-         }
-         cy.wait('@body').then(() =>
-         {
-             cy.log("BODY !!! GOT HERE !!!");
-         })
-        //cy.log("GOT HERE !!!");
-        //assert(body.includes('meta http-equiv="refresh" content="2; url='));
-    })
-})
+    cy.contains(linkText).should('have.attr', 'href').then((href) => {
+        requestUntilRefreshUrl(href).then((refreshUrl) => {
+            // TODO fetch the refresh URL here with cy.request()
+            console.log(refreshUrl);
+        });
+    });
+});
