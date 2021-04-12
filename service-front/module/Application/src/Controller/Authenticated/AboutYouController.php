@@ -82,10 +82,8 @@ class AboutYouController extends AbstractAuthenticatedController
             $form->bind($userDetailsArr);
         }
 
-        return new ViewModel([
-            'form'  => $form,
-            'isNew' => $isNew,
-        ]);
+        $cancelUrl = $this->pageHistoryStorage->getPreviousPath();
+        return new ViewModel(compact('form', 'isNew', 'cancelUrl'));
     }
 
     /**
