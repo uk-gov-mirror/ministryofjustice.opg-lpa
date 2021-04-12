@@ -42,6 +42,8 @@ class ChangeEmailAddressController extends AbstractAuthenticatedController
             }
         }
 
-        return new ViewModel(compact('form', 'error', 'currentEmailAddress'));
+        $cancelUrl = $this->pageHistoryStorage->getPreviousPath();
+        $context = compact('form', 'error', 'currentEmailAddress', 'cancelUrl');
+        return new ViewModel($context);
     }
 }
