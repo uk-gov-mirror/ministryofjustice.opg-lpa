@@ -27,6 +27,7 @@ class FeeReductionController extends AbstractLpaController
      * @param UserService $userService
      * @param ReplacementAttorneyCleanup $replacementAttorneyCleanup
      * @param Metadata $metadata
+     * @param PageHistoryStorage $pageHistoryStorage
      * @param MoneyFormat $moneyFormat
      */
     public function __construct(
@@ -40,6 +41,7 @@ class FeeReductionController extends AbstractLpaController
         $userService,
         $replacementAttorneyCleanup,
         $metadata,
+        $pageHistoryStorage,
         $moneyFormat = null
     ) {
         parent::__construct(
@@ -52,7 +54,8 @@ class FeeReductionController extends AbstractLpaController
             $lpaApplicationService,
             $userService,
             $replacementAttorneyCleanup,
-            $metadata
+            $metadata,
+            $pageHistoryStorage
         );
 
         if (is_null($moneyFormat)) {
