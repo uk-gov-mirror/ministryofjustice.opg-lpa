@@ -1035,7 +1035,6 @@ jobs:
           username: $DOCKER_USER
           password: $DOCKER_ACCESS_TOKEN
     resource_class: small
-
     parameters:
       workspace:
         description: Terraform workspace name
