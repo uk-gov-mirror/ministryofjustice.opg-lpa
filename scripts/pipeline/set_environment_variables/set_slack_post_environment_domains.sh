@@ -3,8 +3,8 @@ generate_post_environment_domains()
 {
 
     # needed as circleci did not santize the input for json properly.
-    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}"   | sed 's/`/\\`/g')
-    echo $SANITISED_COMMIT_MESSAGE
+    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}"   | sed 's/"/\\"/g' | sed 's/`/\\`/g')
+
 
     cat <<EOF
 {
@@ -60,6 +60,9 @@ EOF
 }
 
 generate_post_environment_domains > /tmp/post_environment_domains.json
+
+echo  SANITISED_COMMIT_MESSAGE
+echo ${SANITISED_COMMIT_MESSAGE}
 
 echo message sent:
 cat /tmp/post_environment_domains.json
