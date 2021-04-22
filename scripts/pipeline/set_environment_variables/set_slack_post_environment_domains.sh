@@ -2,7 +2,7 @@
 
 generate_post_environment_domains()
 {
-    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed 's/"/\\"/g')
+    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE//$'\n'/\\\n}"  | sed 's/"/\\"/g' | sed "s/\'/\\\'/g" | sed 's/`/\\`/g')
     #| sed 's/`/\\`/g | sed 's/'\''/\\'\''/g'
     echo  SANITISED_COMMIT_MESSAGE
     echo ${SANITISED_COMMIT_MESSAGE}
@@ -51,7 +51,7 @@ generate_post_environment_domains()
                 [
                     {
                         "type": "mrkdwn",
-                        "text": "by user: ${CIRCLE_USERNAME} - branch: ${CIRCLE_BRANCH} - Commit Message: ${SANITISED_COMMIT_MESSAGE//$'\n'/\\n}"
+                        "text": "by user: ${CIRCLE_USERNAME} - branch: ${CIRCLE_BRANCH} - Commit Message: ${SANITISED_COMMIT_MESSAGE}"
                     }
                 ]
             }
