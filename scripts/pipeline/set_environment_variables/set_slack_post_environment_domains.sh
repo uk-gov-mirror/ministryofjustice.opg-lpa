@@ -1,6 +1,10 @@
 #! /bin/bash
 generate_post_environment_domains()
 {
+
+    # needed as circleci did not santize the input for json properly.
+    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed 's/"/\\"/g' | sed 's/`/\\`/g | sed 's/'\''/\\'\''/g')
+
     cat <<EOF
 {
     "blocks": [],
@@ -44,13 +48,12 @@ generate_post_environment_domains()
                 [
                     {
                         "type": "mrkdwn",
-                        "text": "by user: ${CIRCLE_USERNAME} - branch: ${CIRCLE_BRANCH} - Commit Message: ${COMMIT_MESSAGE//$'\n'/\\n}"
+                        "text": "by user: ${CIRCLE_USERNAME} - branch: ${CIRCLE_BRANCH} - Commit Message: ${SANITISED_COMMIT_MESSAGE//$'\n'/\\n}"
                     }
                 ]
             }
         ]
     }
-    ]
 }
 EOF
 }
