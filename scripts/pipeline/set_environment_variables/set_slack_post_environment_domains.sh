@@ -2,7 +2,7 @@
 
 generate_post_environment_domains()
 {
-    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE} | sed 's/"/\\"/g' | sed 's/`/\\`/g | sed 's/'\''/\\'\''/g')
+    SANITISED_COMMIT_MESSAGE=$(echo "${COMMIT_MESSAGE}" | sed 's/"/\\"/g' | sed 's/`/\\`/g | sed 's/'\''/\\'\''/g')
     echo  SANITISED_COMMIT_MESSAGE
     echo ${SANITISED_COMMIT_MESSAGE}
 
