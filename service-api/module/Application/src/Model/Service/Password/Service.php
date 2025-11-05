@@ -74,7 +74,11 @@ class Service extends AbstractService
             ];
         }
 
-        $token = make_token();
+        if (getenv('OPG_LPA_API_TOKEN_GENERATION') === 'fixed') {
+            $token = str_replace('+', '', explode('@', $username)[0]);
+        } else {
+            $token = make_token();
+        }
 
         $expires = new DateTime("+" . self::TOKEN_TTL . " seconds");
 

@@ -59,7 +59,11 @@ class Service extends AbstractService
             // Create a 32 character user id and activation token.
             $userId = bin2hex(random_bytes(16));
 
-            $activationToken = make_token();
+            if (getenv('OPG_LPA_API_TOKEN_GENERATION') === 'fixed') {
+                $activationToken = str_replace('+', '', explode('@', $username)[0]);
+            } else {
+                $activationToken = make_token();
+            }
 
             $created = $this->getUserRepository()->create($userId, [
                 'identity'              => $username,
