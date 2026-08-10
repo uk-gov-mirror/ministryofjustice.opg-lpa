@@ -223,6 +223,15 @@ return [
                                     ],
                                 ],
                             ],
+                            'join' => [
+                                'type' => 'Segment',
+                                'options' => [
+                                    'route'    => '/join',
+                                    'defaults' => [
+                                        'action' => 'join',
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
 

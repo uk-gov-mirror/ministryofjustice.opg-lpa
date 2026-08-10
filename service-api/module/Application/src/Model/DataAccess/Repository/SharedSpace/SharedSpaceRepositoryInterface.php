@@ -68,7 +68,6 @@ interface SharedSpaceRepositoryInterface
      */
     public function getSharedSpaceIdForUser(string $userId): ?string;
 
-
     /**
      * @return SharedSpaceMember|null
      */
@@ -89,6 +88,10 @@ interface SharedSpaceRepositoryInterface
      */
     public function isAdmin(string $sharedSpaceId, string $userId): bool;
 
+    public function updateMember(string $sharedSpaceId, string $userId, bool $isAdmin, bool $isActive): void;
+
+    public function getInviteByCodeAndSharedSpaceName(string $accessCode, string $sharedSpaceName): ?MemberInvite;
+
     /**
      * @return array<MemberInvite>
      */
@@ -99,5 +102,5 @@ interface SharedSpaceRepositoryInterface
      */
     public function createInvite(MemberInvite $memberInvite): int;
 
-    public function updateMember(string $sharedSpaceId, string $userId, bool $isAdmin, bool $isActive): void;
+    public function deleteInvite(MemberInvite $memberInvite): void;
 }

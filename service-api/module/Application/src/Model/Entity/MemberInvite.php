@@ -9,6 +9,7 @@ use DateTimeInterface;
 readonly class MemberInvite
 {
     public function __construct(
+        public ?int $id,
         public string $userId,
         public string $sharedSpaceId,
         public string $firstNames,
@@ -19,5 +20,19 @@ readonly class MemberInvite
         public DateTimeInterface $created,
         public DateTimeInterface $expires,
     ) {
+    }
+
+    public static function create(
+        string $userId,
+        string $sharedSpaceId,
+        string $firstNames,
+        string $lastName,
+        string $email,
+        bool $isAdmin,
+        string $code,
+        DateTimeInterface $created,
+        DateTimeInterface $expires,
+    ): MemberInvite {
+        return new MemberInvite(null, $userId, $sharedSpaceId, $firstNames, $lastName, $email, $isAdmin, $code, $created, $expires);
     }
 }

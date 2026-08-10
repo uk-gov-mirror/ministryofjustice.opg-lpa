@@ -8,6 +8,7 @@ use Application\Model\DataAccess\Repository\Application\ApplicationRepositoryInt
 use Application\Model\DataAccess\Repository\SharedSpace\SharedSpaceRepositoryInterface;
 use Application\Model\DataAccess\Repository\User\UserRepositoryInterface;
 use Application\Model\Entity\MemberInvite;
+use Application\Model\Service\SharedSpace\InviteNotFoundException;
 use Application\Model\Service\SharedSpace\SharedSpaceService;
 use Application\Model\Service\SharedSpace\MemberNotInSharedSpaceException;
 use Application\Model\Service\SharedSpace\UserAlreadyInSharedSpaceException;
@@ -19,6 +20,7 @@ use MakeShared\DataModel\User\User;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryTestCase;
 use Mockery\MockInterface;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -309,6 +311,7 @@ final class SharedSpaceServiceTest extends MockeryTestCase
             ->with($sharedSpaceId)
             ->andReturn([
                 new MemberInvite(
+                    id: 1,
                     firstNames: 'a',
                     lastName: 'b',
                     email: 'c',
@@ -320,6 +323,7 @@ final class SharedSpaceServiceTest extends MockeryTestCase
                     created: new DateTime(),
                 ),
                 new MemberInvite(
+                    id: 2,
                     firstNames: 'd',
                     lastName: 'e',
                     email: 'f',
@@ -351,6 +355,7 @@ final class SharedSpaceServiceTest extends MockeryTestCase
     public function testInvite()
     {
         $memberInvite = new MemberInvite(
+            id: 1,
             firstNames: 'a',
             lastName: 'b',
             email: 'c',
@@ -377,5 +382,69 @@ final class SharedSpaceServiceTest extends MockeryTestCase
             'sharedSpaceName' => 'my space',
             'inviteCode' => $memberInvite->code,
         ], $result);
+    }
+
+    #[DoesNotPerformAssertions]
+    public function testJoin()
+    {
+        $userId = 'my user';
+        $sharedSpaceName = 'My Space';
+        $accessCode = '1234';
+
+        $invite = new MemberInvite(
+            id: 1,
+            firstNames: 'a',
+            lastName: 'b',
+            email: 'c',
+            expires: new DateTime('+1 minute'),
+            userId: 'me',
+            sharedSpaceId: 'some-space',
+            isAdmin: false,
+            code: '',
+            created: new DateTime(),
+        );
+
+        $this->sharedSpaceRepository->shouldReceive('beginTransaction');
+        $this->sharedSpaceRepository->shouldReceive('getSharedSpaceIdForUser')
+            ->with($userId)
+            ->andReturn(null);
+        $this->sharedSpaceRepository->shouldReceive('getInviteByCodeAndSharedSpaceName')
+            ->with($accessCode, $sharedSpaceName)
+            ->andReturn($invite);
+        $this->sharedSpaceRepository->shouldReceive('addMember')
+            ->with($invite->sharedSpaceId, $userId, $invite->isAdmin);
+        $this->sharedSpaceRepository->shouldReceive('deleteInvite')
+            ->with($invite);
+        $this->sharedSpaceRepository->shouldReceive('commit');
+
+        $this->applicationRepository->shouldReceive('setSharedSpaceOwner')
+            ->with($userId, $invite->sharedSpaceId)
+            ->andReturn(5);
+
+        $this->service->join($userId, $sharedSpaceName, $accessCode);
+    }
+
+    public function testJoinWhenAlreadyInSharedSpace()
+    {
+        $this->sharedSpaceRepository->shouldReceive('beginTransaction');
+        $this->sharedSpaceRepository->shouldReceive('getSharedSpaceIdForUser')
+            ->andReturn('my space');
+        $this->sharedSpaceRepository->shouldReceive('rollback');
+
+        $this->expectException(UserAlreadyInSharedSpaceException::class);
+        $this->service->join('my user', 'My Space', '1234');
+    }
+
+    public function testJoinWhenInviteNotFound()
+    {
+        $this->sharedSpaceRepository->shouldReceive('beginTransaction');
+        $this->sharedSpaceRepository->shouldReceive('getSharedSpaceIdForUser')
+            ->andReturn(null);
+        $this->sharedSpaceRepository->shouldReceive('getInviteByCodeAndSharedSpaceName')
+            ->andReturn(null);
+        $this->sharedSpaceRepository->shouldReceive('rollback');
+
+        $this->expectException(InviteNotFoundException::class);
+        $this->service->join('my user', 'My Space', '1234');
     }
 }

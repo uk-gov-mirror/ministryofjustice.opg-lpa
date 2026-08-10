@@ -171,4 +171,16 @@ final class SharedSpaceServiceTest extends TestCase
 
         $this->assertTrue($result);
     }
+
+    public function testJoin(): void
+    {
+        $this->client->expects($this->once())
+            ->method('httpPost')
+            ->with('/v2/shared-space/join', [
+                'sharedSpaceName' => 'my space',
+                'accessCode' => '1234',
+            ]);
+
+        $this->service->join('my space', '1234');
+    }
 }
