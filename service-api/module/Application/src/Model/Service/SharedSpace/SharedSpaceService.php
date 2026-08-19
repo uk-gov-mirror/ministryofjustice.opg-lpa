@@ -136,12 +136,13 @@ class SharedSpaceService
         }
 
         return [
-            'id' => $profile->getId(),
+            'sharedSpaceName' => $member->getSharedSpaceName(),
+            'userId' => $profile->getId(),
             'name' => $profile->getName(),
-            'email' => $profile->getEmail(),
-            'lastLoginAt' => $profile->getLastLoginAt(),
-            'isActive' => $member->getIsActive(),
-            'isAdmin' => $member->getIsAdmin(),
+            'email' => $profile->getEmail()->getAddress(),
+            'lastLoginAt' => $profile->getLastLoginAt()?->format('Y-m-d\TH:i:s.uO'),
+            'isActive' => $member->isActive(),
+            'isAdmin' => $member->isAdmin(),
         ];
     }
 
@@ -160,12 +161,13 @@ class SharedSpaceService
             });
 
             return [
-                'id' => $profile->getId(),
+                'sharedSpaceName' => $member->getSharedSpaceName(),
+                'userId' => $profile->getId(),
                 'name' => $profile->getName(),
-                'email' => $profile->getEmail(),
-                'lastLoginAt' => $profile->getLastLoginAt(),
-                'isActive' => $member->getIsActive(),
-                'isAdmin' => $member->getIsAdmin(),
+                'email' => $profile->getEmail()->getAddress(),
+                'lastLoginAt' => $profile->getLastLoginAt()?->format('Y-m-d\TH:i:s.uO'),
+                'isActive' => $member->isActive(),
+                'isAdmin' => $member->isAdmin(),
             ];
         }, $profiles);
     }
@@ -221,6 +223,9 @@ class SharedSpaceService
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function updateMember(string $sharedSpaceId, string $userId, bool $isAdmin, bool $isActive): void
     {
         try {
@@ -242,6 +247,9 @@ class SharedSpaceService
         ]);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function deleteMember(string $sharedSpaceId, string $userId, string $userToDeleteId): void
     {
         $this->sharedSpaceRepository->beginTransaction();

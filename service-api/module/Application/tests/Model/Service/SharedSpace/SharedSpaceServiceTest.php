@@ -143,9 +143,9 @@ final class SharedSpaceServiceTest extends MockeryTestCase
         $this->sharedSpaceRepository->shouldReceive('getMembers')
             ->with($sharedSpaceId)
             ->andReturn([
-                new SharedSpaceMember(['sharedSpaceId' => $sharedSpaceId, 'userId' => 'user1', 'isAdmin' => true, 'isActive' => true]),
-                new SharedSpaceMember(['sharedSpaceId' => $sharedSpaceId, 'userId' => 'user2', 'isAdmin' => false, 'isActive' => true]),
-                new SharedSpaceMember(['sharedSpaceId' => $sharedSpaceId, 'userId' => 'user3', 'isAdmin' => true, 'isActive' => false]),
+                new SharedSpaceMember(['sharedSpaceName' => 'My Space', 'userId' => 'user1', 'isAdmin' => true, 'isActive' => true]),
+                new SharedSpaceMember(['sharedSpaceName' => 'My Space', 'userId' => 'user2', 'isAdmin' => false, 'isActive' => true]),
+                new SharedSpaceMember(['sharedSpaceName' => 'My Space', 'userId' => 'user3', 'isAdmin' => true, 'isActive' => false]),
             ]);
 
         $this->userRepository->shouldReceive('getProfiles')
@@ -175,28 +175,31 @@ final class SharedSpaceServiceTest extends MockeryTestCase
 
         $this->assertEquals([
             [
-                'id' => 'user1',
+                'userId' => 'user1',
                 'name' => new Name(['first' => 'me']),
                 'email' => new EmailAddress(['address' => '1@example.com']),
-                'lastLoginAt' => new DateTime('2020-01-01'),
+                'lastLoginAt' => (new DateTime('2020-01-01'))->format('Y-m-d\TH:i:s.uO'),
                 'isActive' => true,
                 'isAdmin' => true,
+                'sharedSpaceName' => 'My Space',
             ],
             [
-                'id' => 'user2',
+                'userId' => 'user2',
                 'name' => new Name(['first' => 'you']),
                 'email' => new EmailAddress(['address' => '2@example.com']),
-                'lastLoginAt' => new DateTime('2020-01-02'),
+                'lastLoginAt' => (new DateTime('2020-01-02'))->format('Y-m-d\TH:i:s.uO'),
                 'isActive' => true,
                 'isAdmin' => false,
+                'sharedSpaceName' => 'My Space'
             ],
             [
-                'id' => 'user3',
+                'userId' => 'user3',
                 'name' => new Name(['first' => 'them']),
                 'email' => new EmailAddress(['address' => '3@example.com']),
-                'lastLoginAt' => new DateTime('2020-01-03'),
+                'lastLoginAt' => (new DateTime('2020-01-03'))->format('Y-m-d\TH:i:s.uO'),
                 'isActive' => false,
                 'isAdmin' => true,
+                'sharedSpaceName' => 'My Space'
             ],
         ], $result);
     }
@@ -208,7 +211,7 @@ final class SharedSpaceServiceTest extends MockeryTestCase
         $this->sharedSpaceRepository->shouldReceive('getMember')
             ->with($sharedSpaceId, 'user2')
             ->andReturn(
-                new SharedSpaceMember(['sharedSpaceId' => $sharedSpaceId, 'userId' => 'user2', 'isAdmin' => false, 'isActive' => true])
+                new SharedSpaceMember(['sharedSpaceName' => 'My Space', 'userId' => 'user2', 'isAdmin' => false, 'isActive' => true])
             );
 
         $this->userRepository->shouldReceive('getProfiles')
@@ -225,10 +228,11 @@ final class SharedSpaceServiceTest extends MockeryTestCase
         $result = $this->service->getMember($sharedSpaceId, 'user2');
 
         $this->assertEquals([
-            'id' => 'user2',
+            'userId' => 'user2',
+            'sharedSpaceName' => 'My Space',
             'name' => new Name(['first' => 'you']),
             'email' => new EmailAddress(['address' => '2@example.com']),
-            'lastLoginAt' => new DateTime('2020-01-02'),
+            'lastLoginAt' => (new DateTime('2020-01-02'))->format('Y-m-d\TH:i:s.uO'),
             'isActive' => true,
             'isAdmin' => false,
         ], $result);

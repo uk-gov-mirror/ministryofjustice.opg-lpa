@@ -3,21 +3,24 @@
 namespace MakeShared\DataModel\SharedSpace;
 
 use MakeShared\DataModel\AbstractData;
+use MakeShared\DataModel\Common\Name;
 use MakeShared\DataModel\Validator\Constraints as ValidatorConstraints;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
 use DateTime;
 
 /**
- * Represents a single user's membership of a shared space - i.e. a row in
- * the shared_space_members table.
+ * Represents a single user's membership of a shared space
  */
 class SharedSpaceMember extends AbstractData
 {
     protected string $sharedSpaceId;
     protected string $userId;
+    protected string $sharedSpaceName;
     protected bool $isAdmin = false;
     protected bool $isActive = true;
     protected DateTime $createdAt;
+    protected Name $name;
+    protected string $email;
 
     public static function loadValidatorMetadata(ClassMetadata $metadata)
     {
@@ -39,6 +42,18 @@ class SharedSpaceMember extends AbstractData
             ),
         ]);
 
+        $metadata->addPropertyConstraints('sharedSpaceName', [
+            new ValidatorConstraints\NotBlank(),
+        ]);
+
+        $metadata->addPropertyConstraints('name', [
+            new ValidatorConstraints\NotBlank(),
+        ]);
+
+        $metadata->addPropertyConstraints('email', [
+            new ValidatorConstraints\NotBlank(),
+        ]);
+
         $metadata->addPropertyConstraints('isAdmin', [
             new ValidatorConstraints\Type('bool'),
         ]);
@@ -53,6 +68,8 @@ class SharedSpaceMember extends AbstractData
         ]);
     }
 
+
+
     /**
      * Map property values to their correct type.
      *
@@ -64,6 +81,7 @@ class SharedSpaceMember extends AbstractData
     {
         return match ($property) {
             'createdAt' => (($value instanceof DateTime || is_null($value)) ? $value : new DateTime($value)),
+            'name' => (($value instanceof Name || is_null($value)) ? $value : new Name($value)),
             default => parent::map($property, $value),
         };
     }
@@ -92,7 +110,7 @@ class SharedSpaceMember extends AbstractData
         return $this;
     }
 
-    public function getIsAdmin(): bool
+    public function isAdmin(): bool
     {
         return $this->isAdmin;
     }
@@ -104,7 +122,7 @@ class SharedSpaceMember extends AbstractData
         return $this;
     }
 
-    public function getIsActive(): bool
+    public function isActive(): bool
     {
         return $this->isActive;
     }
@@ -126,5 +144,38 @@ class SharedSpaceMember extends AbstractData
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function getSharedSpaceName(): string
+    {
+        return $this->sharedSpaceName;
+    }
+
+    public function setSharedSpaceName(string $sharedSpaceName): SharedSpaceMember
+    {
+        $this->sharedSpaceName = $sharedSpaceName;
+        return $this;
+    }
+
+    public function setName(Name $name): SharedSpaceMember
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getName(): Name
+    {
+        return $this->name;
+    }
+
+    public function setEmail(string $email): SharedSpaceMember
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
     }
 }
