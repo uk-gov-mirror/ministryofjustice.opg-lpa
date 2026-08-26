@@ -108,7 +108,7 @@ jobs:
 
   docker_build_scan_push:
     name: Docker Build, Scan and Push
-    uses: ./.github/workflows/docker_job.yml
+    uses: ./.github/workflows/docker_build_test.yml
     needs:
       - workflow_variables
     with:
