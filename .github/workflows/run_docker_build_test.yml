@@ -8,6 +8,9 @@ on:
         required: true
         default: manual-test
         type: string
+  push:
+    branches:
+      - LPAL-2194-shared-webops-actions-consolidate-docker-build-actions-with-snyk-scanning-across-teams-and-standardise-steps
 
 permissions:
   contents: read
