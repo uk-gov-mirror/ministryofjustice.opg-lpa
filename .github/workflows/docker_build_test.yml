@@ -80,5 +80,3 @@ jobs:
       job_name: ${{ matrix.scan_id }}
     secrets:
       SNYK_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
-
-# testing updates to workflow job
