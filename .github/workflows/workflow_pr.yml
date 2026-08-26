@@ -115,7 +115,6 @@ jobs:
       oidc_docker_role: ${{ vars.OIDC_DOCKER_ROLE }}
       tag: ${{ needs.workflow_variables.outputs.short_sha }}
     secrets:
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       SNYK_OPG_ORG_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
 
   phpunit_tests:
