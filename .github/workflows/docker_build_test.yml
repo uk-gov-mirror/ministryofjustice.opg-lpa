@@ -65,6 +65,7 @@ jobs:
     with:
       image_name: 311462405659.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.image_name }}
       image_tag: ${{ inputs.tag }}
+      enable_registry_cache: false
       build_path: .
       build_target: test-runner
       build_options: >-
