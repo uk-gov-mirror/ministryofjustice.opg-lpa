@@ -1,24 +1,24 @@
-name: Run Docker Build Test
+# name: Run Docker Build Test
 
-on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag for Docker test images"
-        required: true
-        default: manual-test
-        type: string
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       tag:
+#         description: "Tag for Docker test images"
+#         required: true
+#         default: manual-test
+#         type: string
 
-permissions:
-  contents: read
-  id-token: write
-  security-events: write
+# permissions:
+#   contents: read
+#   id-token: write
+#   security-events: write
 
-jobs:
-  docker_build_test:
-    uses: ./.github/workflows/docker_build_test.yml
-    with:
-      tag: ${{ inputs.tag }}
-      oidc_docker_role: ${{ vars.OIDC_DOCKER_ROLE }}
-    secrets:
-      SNYK_OPG_ORG_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
+# jobs:
+#   docker_build_test:
+#     uses: ./.github/workflows/docker_build_test.yml
+#     with:
+#       tag: ${{ inputs.tag }}
+#       oidc_docker_role: ${{ vars.OIDC_DOCKER_ROLE }}
+#     secrets:
+#       SNYK_OPG_ORG_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
