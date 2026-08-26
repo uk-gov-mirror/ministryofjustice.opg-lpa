@@ -1,0 +1,82 @@
+name: "[Docker] Build and Scan Test Images"
+
+defaults:
+  run:
+    shell: bash
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag for Docker test images"
+        required: true
+        type: string
+      oidc_docker_role:
+        description: "OIDC role to assume for ECR permissions"
+        required: true
+        type: string
+    secrets:
+      SNYK_OPG_ORG_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+
+jobs:
+  test_image_build_scan:
+    name: ${{ matrix.scan_id }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_name: lpa-admin-app-test
+            dockerfile_path: ./service-admin/docker/app
+            snyk_policy_path: service-admin/docker/app/.snyk
+            scan_id: admin_app_test
+            with_xdebug: true
+
+          - image_name: lpa-api-app-test
+            dockerfile_path: ./service-api/docker/app
+            snyk_policy_path: service-api/docker/app/.snyk
+            scan_id: api_app_test
+            with_xdebug: true
+
+          - image_name: lpa-front-app-test
+            dockerfile_path: ./service-front/docker/app
+            snyk_policy_path: service-front/docker/app/.snyk
+            scan_id: front_app_test
+            with_xdebug: true
+
+          - image_name: lpa-pdf-app-test
+            dockerfile_path: ./service-pdf/docker/app
+            snyk_policy_path: service-pdf/docker/app/.snyk
+            scan_id: pdf_app_test
+            with_xdebug: true
+            with_visual_tests: true
+
+          - image_name: lpa-shared-test
+            dockerfile_path: ./shared/docker/test-runner
+            snyk_policy_path: shared/docker/test-runner/.snyk
+            scan_id: shared_test
+
+    uses: ministryofjustice/opg-github-workflows/.github/workflows/build-multi-architecture-image-test.yml@LPAL-2194-shared-webops-actions-consolidate-docker-build-actions-with-snyk-scanning-across-teams-and-standardise-steps
+    with:
+      image_name: 311462405659.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.image_name }}
+      image_tag: ${{ inputs.tag }}
+      build_path: .
+      build_target: test-runner
+      build_options: >-
+        --file ${{ matrix.dockerfile_path }}/Dockerfile
+        --build-arg OPG_LPA_COMMON_APP_VERSION=${{ github.sha }}
+        --build-arg ENABLE_XDEBUG=${{ matrix.with_xdebug && '1' || '0' }}
+        --build-arg VISUAL_TESTS=${{ matrix.with_visual_tests && 'true' || 'false' }}
+      oidc_role_to_assume_build: ${{ inputs.oidc_docker_role }}
+      oidc_role_to_assume_push: ${{ inputs.oidc_docker_role }}
+      snyk_ecr_registry_id: "311462405659"
+      snyk_iac_scan: false
+      snyk_container_options: --severity-threshold=high --policy-path=${{ matrix.snyk_policy_path }}
+      job_name: ${{ matrix.scan_id }}
+    secrets:
+      SNYK_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
