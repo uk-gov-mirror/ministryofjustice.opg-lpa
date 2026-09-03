@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   docker_build_scan_push:
-    name: "${{ matrix.scan_id }}"
+    name: "Build and scan ${{ matrix.image_name }}"
     strategy:
       fail-fast: false
       matrix:
