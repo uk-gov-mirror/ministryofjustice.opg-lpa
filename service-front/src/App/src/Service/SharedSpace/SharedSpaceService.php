@@ -8,6 +8,7 @@ use App\Service\ApiClient\Client;
 use App\Service\Mail\MailParameters;
 use App\Service\Mail\Transport\MailTransportInterface;
 use MakeShared\DataModel\SharedSpace\SharedSpaceMember;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Log\LoggerInterface;
 use Exception;
 use Throwable;
@@ -188,6 +189,10 @@ class SharedSpaceService
         return true;
     }
 
+    /**
+     * @throws Throwable
+     * @throws ClientExceptionInterface
+     */
     public function invite(string $inviterEmail, string $firstNames, string $lastName, string $email, bool $isAdmin): bool
     {
         try {
@@ -201,11 +206,8 @@ class SharedSpaceService
                 ],
             );
         } catch (Throwable $e) {
-            $this->logger->warning('Invite failed', [
-                'exception' => $e,
-            ]);
-
-            return false;
+            $this->logger->error('Creating shared space invite failed:', ['exception' => $e]);
+            throw $e;
         }
 
         $params = new MailParameters(
