@@ -1138,6 +1138,13 @@ class Lpa extends AbstractData
         return $this->version;
     }
 
+    public function setVersion(?int $version): static
+    {
+        $this->version = $version;
+
+        return $this;
+    }
+
     public function getUpdatedBy(): ?string
     {
         return $this->updatedBy;

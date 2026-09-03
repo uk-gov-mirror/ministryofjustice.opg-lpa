@@ -30,6 +30,7 @@ class Service extends AbstractService
         }
 
         $lpa = $this->getLpa($lpaId);
+        $lpa->setVersion($ifMatchVersion);
         $lpa->setUpdatedBy($userId);
         $lpa->getDocument()->setPrimaryAttorneyDecisions($primaryAttorneyDecisions);
 
