@@ -1,0 +1,44 @@
+name: "[Test] Build Multi Architecture Image (reusable workflow test)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "test run"
+        type: string
+        default: "reusable-workflow-test"
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+
+jobs:
+  test_build_local_only:
+    uses: ministryofjustice/opg-github-workflows/.github/workflows/test-multi-build-scan-push-workflow.yml@LPAL-2194-shared-webops-actions-consolidate-docker-build-actions-with-snyk-scanning-across-teams-and-standardise-steps
+    with:
+      image_name: "opg-lpa-test-image"
+      image_tag: ${{ inputs.image_tag }}
+      enable_registry_cache: false
+      enable_snyk_scanning: false
+      build_path: "."
+      build_options: "--file cypress/Dockerfile"
+      job_name: "Test Build Multi Arch Image"
+
+  test_build_full_pipeline:
+    needs: test_build_local_only
+    uses: ministryofjustice/opg-github-workflows/.github/workflows/test-multi-build-scan-push-workflow.yml@LPAL-2194-shared-webops-actions-consolidate-docker-build-actions-with-snyk-scanning-across-teams-and-standardise-steps
+    with:
+      image_name: "311462405659.dkr.ecr.eu-west-1.amazonaws.com/opg-lpa-test-image"
+      image_tag: ${{ inputs.image_tag }}
+      enable_registry_cache: true
+      enable_snyk_scanning: true
+      aws_region: "eu-west-1"
+      oidc_role_to_assume_build: ${{ vars.OIDC_DOCKER_ROLE }}
+      oidc_role_to_assume_push: ${{ vars.OIDC_DOCKER_ROLE }}
+      snyk_ecr_registry_id: "311462405659"
+      build_path: "."
+      build_options: "--file cypress/Dockerfile"
+      job_name: "Test Build Multi Arch Image (Full)"
+    secrets:
+      SNYK_TOKEN: ${{ secrets.SNYK_OPG_ORG_TOKEN }}
