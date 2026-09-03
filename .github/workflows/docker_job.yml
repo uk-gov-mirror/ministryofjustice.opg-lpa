@@ -39,68 +39,82 @@ jobs:
       matrix:
         include:
           - image_name: online-lpa/front_app
+            snyk_policy_path: service-front/docker/app/.snyk
             build_options: "--file ./service-front/docker/app/Dockerfile"
             scan_id: front_app
 
           - image_name: online-lpa/front_web
+            snyk_policy_path: service-front/docker/web/.snyk
             build_options: "--file ./service-front/docker/web/Dockerfile"
             cli_commands: "docker compose run --rm npm-front ci --ignore-scripts && docker compose run --rm npm-front run build"
             scan_id: front_web
 
           - image_name: online-lpa/api_app
+            snyk_policy_path: service-api/docker/app/.snyk
             build_options: "--file ./service-api/docker/app/Dockerfile"
             scan_id: api_app
 
           - image_name: online-lpa/api_web
+            snyk_policy_path: service-api/docker/web/.snyk
             build_options: "--file ./service-api/docker/web/Dockerfile"
             scan_id: api_web
 
           - image_name: online-lpa/admin_app
+            snyk_policy_path: service-admin/docker/app/.snyk
             build_options: "--file ./service-admin/docker/app/Dockerfile"
             scan_id: admin_app
 
           - image_name: online-lpa/admin_web
+            snyk_policy_path: service-admin/docker/web/.snyk
             build_options: "--file ./service-admin/docker/web/Dockerfile"
             scan_id: admin_web
 
           - image_name: online-lpa/pdf_app
+            snyk_policy_path: service-pdf/docker/app/.snyk
             build_options: "--file ./service-pdf/docker/app/Dockerfile"
             scan_id: pdf_app
 
           - image_name: online-lpa/seeding_app
+            snyk_policy_path: service-seeding/docker/app/.snyk
             build_options: "--file ./service-seeding/docker/app/Dockerfile"
             scan_id: seeding_app
 
           - image_name: lambda-aurora_scheduler
+            snyk_policy_path: aurora-scheduler/docker/.snyk
             build_options: "--file ./aurora-scheduler/docker/Dockerfile"
             image_tag: latest
             scan_id: aurora_scheduler
 
           - image_name: lpa-admin-app-test
+            snyk_policy_path: service-admin/docker/app/.snyk
             build_options: "--file ./service-admin/docker/app/Dockerfile --build-arg ENABLE_XDEBUG=1"
             build_target: test-runner
             artifact_name: admin-app-test
             scan_id: admin_app_test
 
           - image_name: lpa-api-app-test
+            snyk_policy_path: service-api/docker/app/.snyk
             build_options: "--file ./service-api/docker/app/Dockerfile --build-arg ENABLE_XDEBUG=1"
             build_target: test-runner
             artifact_name: api-app-test
             scan_id: api_app_test
 
           - image_name: lpa-front-app-test
+            snyk_policy_path: service-front/docker/app/.snyk
             build_options: "--file ./service-front/docker/app/Dockerfile --build-arg ENABLE_XDEBUG=1"
             build_target: test-runner
             artifact_name: front-app-test
             scan_id: front_app_test
 
           - image_name: lpa-pdf-app-test
+            snyk_policy_path: service-pdf/docker/app/.snyk
             build_options: "--file ./service-pdf/docker/app/Dockerfile --build-arg ENABLE_XDEBUG=1 --build-arg VISUAL_TESTS=true"
             build_target: test-runner
             artifact_name: pdf-app-test
             scan_id: pdf_app_test
 
           - image_name: lpa-shared-test
+            snyk_policy_path: shared/docker/test-runner/.snyk
             build_options: "--file ./shared/docker/test-runner/Dockerfile"
             build_target: test-runner
             artifact_name: shared-test
@@ -115,6 +129,8 @@ jobs:
       cli_commands: ${{ matrix.cli_commands || '' }}
       enable_registry_cache: true
       enable_snyk_scanning: true
+      snyk_iac_scan: false
+      snyk_policy_path: ${{ matrix.snyk_policy_path || '' }}
       aws_region: eu-west-1
       oidc_role_to_assume_build: ${{ inputs.oidc_docker_role }}
       oidc_role_to_assume_push: ${{ inputs.oidc_docker_role }}
