@@ -7,6 +7,20 @@ on:
         description: "test run"
         type: string
         default: "reusable-workflow-test"
+      aws_region:
+        description: "AWS region for ECR"
+        type: string
+        default: "eu-west-1"
+      ecr_registry_id:
+        description: "AWS account ID hosting the ECR test repository and Snyk image"
+        required: true
+        type: string
+        default: "311462405659"
+      ecr_repository:
+        description: "ECR repository for the test image"
+        required: true
+        type: string
+        default: "opg-lpa-test-image"
 
 permissions:
   contents: read
@@ -29,14 +43,14 @@ jobs:
     needs: test_build_local_only
     uses: ministryofjustice/opg-github-workflows/.github/workflows/test-multi-build-scan-push-workflow.yml@LPAL-2194-shared-webops-actions-consolidate-docker-build-actions-with-snyk-scanning-across-teams-and-standardise-steps
     with:
-      image_name: "311462405659.dkr.ecr.eu-west-1.amazonaws.com/opg-lpa-test-image"
+      image_name: ${{ format('{0}.dkr.ecr.{1}.amazonaws.com/{2}', inputs.ecr_registry_id, inputs.aws_region, inputs.ecr_repository) }}
       image_tag: ${{ inputs.image_tag }}
       enable_registry_cache: true
       enable_snyk_scanning: true
-      aws_region: "eu-west-1"
+      aws_region: ${{ inputs.aws_region }}
       oidc_role_to_assume_build: ${{ vars.OIDC_DOCKER_ROLE }}
       oidc_role_to_assume_push: ${{ vars.OIDC_DOCKER_ROLE }}
-      snyk_ecr_registry_id: "311462405659"
+      snyk_ecr_registry_id: ${{ inputs.ecr_registry_id }}
       build_path: "."
       build_options: "--file cypress/Dockerfile"
       job_name: "Test Build Multi Arch Image (Full)"
