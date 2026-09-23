@@ -498,4 +498,12 @@ class SharedSpaceService
             'was_last_member' => $isLastMember,
         ]);
     }
+
+    /**
+     * @return array{results: array, total: int}
+     */
+    public function matchSharedSpaces(string $query, array $options = []): array
+    {
+        return $this->sharedSpaceRepository->matchSharedSpaces($query, $options);
+    }
 }

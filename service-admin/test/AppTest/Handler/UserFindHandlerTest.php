@@ -7,15 +7,15 @@ namespace AppTest\Handler;
 use App\Form\UserFind;
 use App\Handler\UserFindHandler;
 use App\RequestAttributes;
-use App\Service\User\UserService;
+use App\Service\UserService;
 use AppTest\Common;
 use Fig\Http\Message\RequestMethodInterface;
 use Laminas\Diactoros\ServerRequest;
 use MakeShared\DataModel\Common\Name;
-use PHPUnit\Framework\TestCase;
 use MakeShared\DataModel\User\User;
 use Mezzio\Template\TemplateRendererInterface;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 class UserFindHandlerTest extends TestCase
@@ -75,8 +75,8 @@ class UserFindHandlerTest extends TestCase
 
         $this->mockUserService->expects($this->once())
             ->method('match')
-            ->with(['query' => 'test', 'offset' => '0', 'limit' => 11])
-            ->willReturn([$user]);
+            ->with(['query' => 'test', 'offset' => '0', 'limit' => 10])
+            ->willReturn(['results' => [$user], 'total' => 1]);
 
         $this->mockTemplateRenderer->expects($this->once())->method('render')->with(
             'app::user-find',
@@ -95,7 +95,7 @@ class UserFindHandlerTest extends TestCase
 
         $this->mockUserService->expects($this->once())
             ->method('match')
-            ->willReturn([new User(['name' => new Name(['first' => 'David'])])]);
+            ->willReturn(['results' => [new User(['name' => new Name(['first' => 'David'])])], 'total' => 1]);
 
         $this->mockTemplateRenderer->method('render')->willReturn('response');
 

@@ -16,18 +16,16 @@ $this->addErrorMap([
 
 <?php $this->insert('snippet::error-summary', ['form' => $form]) ?>
 
-<form method="post" action="<?= $this->url('user.search') ?>">
+<form method="get" action="<?= $this->url('user.search') ?>">
     <?php $this->insert('snippet::input-hidden', ['formElement' => $form->get('secret')]) ?>
 
     <div class="govuk-form-group">
         <fieldset class="govuk-fieldset" role="group">
             <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
                 <h1 class="govuk-fieldset__heading">
-                    User Details
+                    Search users and shared spaces
                 </h1>
             </legend>
-
-            <p class="govuk-body">Search for a user by email address, user ID, or A Reference.</p>
 
             <?php $this->insert('snippet::input-select', [
                 'formLabel'   => 'Search by',
@@ -37,9 +35,13 @@ $this->addErrorMap([
 
             <?php $this->insert('snippet::input-text', [
                 'formLabel'   => 'Search value',
-                'formElement' => $form->get('email'),
+                'formElement' => $form->get('searchTerm'),
                 'formType'    => 'text',
-                'attrs'       => ['data-cy' => 'email-address-input'],
+                'attrs'       => ['data-cy' => 'search-term-input'],
+            ]) ?>
+
+            <?php $this->insert('snippet::input-hidden', [
+                    'formElement' => $form->get('offset')
             ]) ?>
         </fieldset>
     </div>
@@ -49,134 +51,238 @@ $this->addErrorMap([
     </button>
 </form>
 
-<?php if (!is_null($user)) { ?>
+<?php if (!is_null($results)) { ?>
+    <h2 class="govuk-heading-m"><?= count($results) ?> search results</h2>
 
-    <h2 class="govuk-heading-m">User details</h2>
+    <?php if (count($results) === 0) { ?>
+        <p class="govuk-body">No results found</p>
+    <?php } else if ($searchType === 'sharedSpaceName') { ?>
+        <?php foreach ($results as $result) { ?>
+            <div class="govuk-summary-card" data-cy="user-summary-card">
+                <div class="govuk-summary-card__title-wrapper">
+                    <h3 class="govuk-summary-card__title">
+                        <?php if (array_key_exists('sharedSpaceName', $result)) { ?>
+                            <?= htmlspecialchars($result['sharedSpaceName']); ?>
+                        <?php } ?>
+                    </h3>
+                    <span class="app-float-right"><strong class="govuk-tag">Shared Space</strong></span>
+                </div>
 
-    <div class="govuk-summary-card" data-cy="user-summary-card">
-        <div class="govuk-summary-card__title-wrapper">
-            <h3 class="govuk-summary-card__title">
-                <?php if (array_key_exists('username', $user)) { ?>
-                    <?= htmlspecialchars($user['username']); ?>
-                <?php } elseif (array_key_exists('isDeleted', $user) && $user['isDeleted']) { ?>
-                    Deleted user
-                <?php } ?>
-            </h3>
-        </div>
-        <div class="govuk-summary-card__content">
-            <dl class="govuk-summary-list">
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">
-                        Account status
-                    </dt>
-                    <dd class="govuk-summary-list__value">
+                <div class="govuk-summary-card__content">
+                    <dl class="govuk-summary-list">
+                        <?php if (isset($result['sharedSpaceId'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Shares space ID
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span data-role="shared-space-id"><?= htmlspecialchars($result['sharedSpaceId']); ?></span>
+                                </dd>
+                            </div>
+                        <?php } ?>
+
+                        <?php if (isset($result['lpaCount'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Number of LPAs
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                            <span>
+                                <?php if (intval($result['lpaCount']) > 0) { ?>
+                                    <a data-role="shared-space-lpa-count" class="govuk-link" href="<?= $this->url('shared-space.lpas', ['sharedSpaceId' => $result['sharedSpaceId']], ['sharedSpaceName' => $result['sharedSpaceName']]) ?>">
+                                        <?= intval($result['lpaCount']); ?>
+                                    </a>
+                                <?php } else { ?>
+                                    0
+                                <?php } ?>
+                            </span>
+                                </dd>
+                            </div>
+                        <?php } ?>
+
+                        <?php if (isset($result['memberCount'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Number of members
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                            <span>
+                                <?php if (intval($result['memberCount']) > 0) { ?>
+                                    <a data-role="shared-space-member-count" class="govuk-link" href="<?= $this->url('shared-space.members', ['sharedSpaceId' => $result['sharedSpaceId']], ['sharedSpaceName' => $result['sharedSpaceName']]) ?>">
+                                        <?= intval($result['memberCount']); ?>
+                                    </a>
+                                <?php } else { ?>
+                                    0
+                                <?php } ?>
+                            </span>
+                                </dd>
+                            </div>
+                        <?php } ?>
+                    </dl>
+                </div>
+            </div>
+        <?php } ?>
+    <?php } else { ?>
+        <?php foreach ($results as $result) { ?>
+            <div class="govuk-summary-card" data-cy="user-summary-card">
+                <div class="govuk-summary-card__title-wrapper">
+                    <h3 class="govuk-summary-card__title">
+                        <?php if (array_key_exists('username', $result)) { ?>
+                            <?= htmlspecialchars($result['username']); ?>
+                        <?php } elseif (array_key_exists('isDeleted', $result) && $result['isDeleted']) { ?>
+                            Deleted user
+                        <?php } ?>
+                    </h3>
+                    <?php if (!empty($result['sharedSpaceId']) && $result['sharedSpaceId'] !== '') { ?>
+                        <span class="app-float-right"><strong class="govuk-tag">Shared Space</strong></span>
+                    <?php } ?>
+                </div>
+                <div class="govuk-summary-card__content">
+                    <dl class="govuk-summary-list">
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">
+                                Account status
+                            </dt>
+                            <dd class="govuk-summary-list__value">
                         <span data-role="user-account-status">
-                            <?php if (array_key_exists('isActive', $user)) { ?>
-                                <?= ($user['isActive'] ? 'Activated' : 'Not activated'); ?>
-                            <?php } elseif (array_key_exists('isDeleted', $user) && $user['isDeleted']) { ?>
+                            <?php if (array_key_exists('isActive', $result)) { ?>
+                                <?= ($result['isActive'] ? 'Activated' : 'Not activated'); ?>
+                            <?php } elseif (array_key_exists('isDeleted', $result) && $result['isDeleted']) { ?>
                                 Deleted
                             <?php } ?>
                         </span>
-                    </dd>
-                </div>
+                            </dd>
+                        </div>
 
-                <?php if (isset($user['userId'])) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            User ID
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            <span data-role="user-id"><?= htmlspecialchars($user['userId']); ?></span>
-                        </dd>
-                    </div>
-                <?php } ?>
+                        <?php if (isset($result['userId'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    User ID
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span data-role="user-id"><?= htmlspecialchars($result['userId']); ?></span>
+                                </dd>
+                            </div>
+                        <?php } ?>
 
-                <?php if (isset($user['activatedAt'])) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Date activated
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            <span data-role="user-activation-date"><?= $this->dateFormat($user['activatedAt']) ?></span>
-                        </dd>
-                    </div>
-                <?php } ?>
+                        <?php if (isset($result['activatedAt'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Date activated
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span data-role="user-activation-date"><?= $this->dateFormat($result['activatedAt']) ?></span>
+                                </dd>
+                            </div>
+                        <?php } ?>
 
-                <?php if (isset($user['lastLoginAt'])) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Last login time
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            <span><?= $this->dateFormat($user['lastLoginAt'], 'Never logged in') ?></span>
-                        </dd>
-                    </div>
-                <?php } ?>
+                        <?php if (isset($result['lastLoginAt'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Last login time
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span><?= $this->dateFormat($result['lastLoginAt'], 'Never logged in') ?></span>
+                                </dd>
+                            </div>
+                        <?php } ?>
 
-                <?php if (isset($user['failedLoginAttempts'])) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Number of failed login attempts
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            <span><?= intval($user['failedLoginAttempts']); ?></span>
-                        </dd>
-                    </div>
-                <?php } ?>
+                        <?php if (isset($result['failedLoginAttempts'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Number of failed login attempts
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span><?= intval($result['failedLoginAttempts']); ?></span>
+                                </dd>
+                            </div>
+                        <?php } ?>
 
-                <?php if (isset($user['isDeleted']) && $user['isDeleted']) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Deleted on
-                        </dt>
-                        <dd class="govuk-summary-list__value">
-                            <span data-role="deletion-date"><?= $this->dateFormat($user['deletedAt'], 'Unknown') ?></span>
-                        </dd>
-                    </div>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Due to
-                        </dt>
-                        <dd class="govuk-summary-list__value">
+                        <?php if (isset($result['isDeleted']) && $result['isDeleted']) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Deleted on
+                                </dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span data-role="deletion-date"><?= $this->dateFormat($result['deletedAt'], 'Unknown') ?></span>
+                                </dd>
+                            </div>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Due to
+                                </dt>
+                                <dd class="govuk-summary-list__value">
                             <span data-role="deletion-reason">
-                                <?php if ($user['reason'] == 'expired') { ?>
+                                <?php if ($result['reason'] == 'expired') { ?>
                                     Account expired
-                                <?php } elseif ($user['reason'] == 'unactivated') { ?>
+                                <?php } elseif ($result['reason'] == 'unactivated') { ?>
                                     User did not activate account
-                                <?php } elseif ($user['reason'] == 'user-initiated') { ?>
+                                <?php } elseif ($result['reason'] == 'user-initiated') { ?>
                                     User manually deleted their account
                                 <?php } ?>
                             </span>
-                        </dd>
-                    </div>
-                <?php } ?>
+                                </dd>
+                            </div>
+                        <?php } ?>
 
-                <?php if (isset($user['numberOfLpas'])) { ?>
-                    <div class="govuk-summary-list__row">
-                        <dt class="govuk-summary-list__key">
-                            Number of LPAs
-                        </dt>
-                        <dd class="govuk-summary-list__value">
+                        <?php if (isset($result['numberOfLpas'])) { ?>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">
+                                    Number of LPAs
+                                </dt>
+                                <dd class="govuk-summary-list__value">
                             <span>
-                                <?php if (intval($user['numberOfLpas']) > 0) { ?>
-                                    <?php if ($user['sharedSpaceId'] !== null) { ?>
-                                        <a data-role="user-lpa-count" class="govuk-link" href="<?= $this->url('shared-space.lpas', ['sharedSpaceId' => $user['sharedSpaceId']], ['sharedSpaceName' => $user['sharedSpaceName']]) ?>">
-                                            <?= intval($user['numberOfLpas']); ?>
+                                <?php if (intval($result['numberOfLpas']) > 0) { ?>
+                                    <?php if ($result['sharedSpaceId'] !== null) { ?>
+                                        <a data-role="user-lpa-count" class="govuk-link" href="<?= $this->url('shared-space.lpas', ['sharedSpaceId' => $result['sharedSpaceId']], ['sharedSpaceName' => $result['sharedSpaceName']]) ?>">
+                                            <?= intval($result['numberOfLpas']); ?>
                                         </a>
                                     <?php } else { ?>
-                                        <a data-role="user-lpa-count" class="govuk-link" href="<?= $this->url('user.lpas', ['userId' => $user['userId']], ['email' => $user['username']]) ?>">
-                                            <?= intval($user['numberOfLpas']); ?>
+                                        <a data-role="user-lpa-count" class="govuk-link" href="<?= $this->url('user.lpas', ['userId' => $result['userId']], ['email' => $result['username']]) ?>">
+                                            <?= intval($result['numberOfLpas']); ?>
                                         </a>
                                     <?php } ?>
                                 <?php } else { ?>
                                     0
                                 <?php } ?>
                             </span>
-                        </dd>
-                    </div>
-                <?php } ?>
-            </dl>
-        </div>
-    </div>
+                                </dd>
+                            </div>
+                        <?php } ?>
+                    </dl>
+                </div>
+            </div>
+        <?php } ?>
+    <?php } ?>
 
+    <?php if (!is_null($previousOffset)) { ?>
+        <?php
+        $options = [
+                'offset' => $previousOffset,
+                'searchType' => $searchType,
+                'searchTerm' => $searchTerm,
+                'secret' => $secret,
+        ];
+        $previousHref = $this->url('user.search', [], $options);
+        ?>
+        <a class="govuk-link" href="<?= $previousHref ?>">Previous</a>
+    <?php } ?>
+
+    <?php if (!is_null($nextOffset)) { ?>
+        <?php if (!is_null($previousOffset)) { # previous link present ?>
+            &nbsp;|&nbsp;
+        <?php } ?>
+        <?php
+        $options = [
+                'offset' => $nextOffset,
+                'searchType' => $searchType,
+                'searchTerm' => $searchTerm,
+                'secret' => $secret,
+        ];
+        $nextHref = $this->url('user.search', [], $options);
+        ?>
+        <a class="govuk-link" href="<?= $nextHref ?>">Next</a>
+    <?php } ?>
+<?php } else { ?>
+    <p class="govuk-body">No results found</p>
 <?php } ?>

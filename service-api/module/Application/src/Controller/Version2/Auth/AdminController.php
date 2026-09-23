@@ -8,6 +8,7 @@ use Application\Library\ApiProblem\ApiProblem;
 use Application\Library\ApiProblem\ApiProblemResponse;
 use Application\Library\Http\Response\Json;
 use Application\Model\Service\Applications\Service;
+use Application\Model\Service\SharedSpace\SharedSpaceService;
 use Application\Model\Service\Users\Service as UsersService;
 use Laminas\Mvc\Controller\AbstractRestfulController;
 use MakeShared\DataModel\Lpa\Lpa;
@@ -17,7 +18,8 @@ class AdminController extends AbstractRestfulController
 {
     public function __construct(
         private UsersService $usersService,
-        private Service $applicationsService
+        private Service $applicationsService,
+        private SharedSpaceService $sharedSpaceService,
     ) {
     }
 
@@ -57,12 +59,36 @@ class AdminController extends AbstractRestfulController
 
         $options = [
             'offset' => $params->fromQuery('offset', 0),
-            'limit' => $params->fromQuery('limit', 10)
+            'limit' => $params->fromQuery('limit', 20)
         ];
 
-        $users = $this->usersService->matchUsers($query, $options);
+        $result = $this->usersService->matchUsers($query, $options);
 
-        return new Json((array) $users);
+        return new Json([
+            'results' => $result['results'],
+            'total' => $result['total'],
+        ]);
+    }
+
+    /**
+     * Match action for shared space details (wildcard/case-insensitive search)
+     */
+    public function matchSharedSpacesAction(): Json
+    {
+        $params = $this->params();
+        $fullOrPartialName = $params->fromQuery('fullOrPartialName');
+
+        $options = [
+            'offset' => $params->fromQuery('offset', 0),
+            'limit' => $params->fromQuery('limit', 20)
+        ];
+
+        $result = $this->sharedSpaceService->matchSharedSpaces($fullOrPartialName, $options);
+
+        return new Json([
+            'results' => $result['results'],
+            'total' => $result['total'],
+        ]);
     }
 
     public function sharedSpaceLpasAction(): Json|ApiProblemResponse

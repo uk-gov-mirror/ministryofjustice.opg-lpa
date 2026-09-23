@@ -356,6 +356,16 @@ return [
                                 ],
                             ],
 
+                            'match-shared-spaces' => [
+                                'type'    => 'Segment',
+                                'options' => [
+                                    'route'    => '/match-shared-spaces',
+                                    'defaults' => [
+                                        'action' => 'matchSharedSpaces',
+                                    ],
+                                ],
+                            ],
+
                             'match-users' => [
                                 'type'    => 'Segment',
                                 'options' => [

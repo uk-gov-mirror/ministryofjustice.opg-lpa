@@ -930,4 +930,24 @@ final class SharedSpaceServiceTest extends MockeryTestCase
         $this->expectExceptionMessage('User not deleted');
         $this->service->deleteAccount('xyz', '1');
     }
+
+    public function testMatchSharedSpaces()
+    {
+        $query = 'the space';
+        $options = ['offset' => 0, 'limit' => 20];
+        $expected = [
+            'results' => [['sharedSpaceId' => 'ss1', 'sharedSpaceName' => 'The Space']],
+            'total' => 1,
+        ];
+
+        $this->sharedSpaceRepository
+            ->shouldReceive('matchSharedSpaces')
+            ->with($query, $options)
+            ->andReturn($expected)
+            ->once();
+
+        $result = $this->service->matchSharedSpaces($query, $options);
+
+        $this->assertEquals($expected, $result);
+    }
 }

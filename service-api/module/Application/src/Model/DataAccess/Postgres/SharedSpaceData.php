@@ -11,6 +11,7 @@ use Application\Model\Entity\MemberInvite;
 use DateTime;
 use Laminas\Db\Adapter\Exception\InvalidQueryException;
 use Laminas\Db\Sql\Expression;
+use Laminas\Db\Sql\Predicate\Like;
 use Laminas\Db\Sql\Predicate\Operator;
 use Laminas\Db\Sql\Predicate\PredicateSet;
 use MakeShared\DataModel\SharedSpace\SharedSpaceMember;
@@ -489,6 +490,59 @@ class SharedSpaceData extends AbstractBase implements SharedSpaceRepositoryInter
         if ($result->getAffectedRows() !== 1) {
             throw new SharedSpaceNotFoundException();
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function matchSharedSpaces(string $fullOrPartialName, array $options = []): array
+    {
+        $offset = 0;
+        $limit = 20;
+
+        if (isset($options['offset'])) {
+            $offset = intval($options['offset']);
+        }
+
+        if (isset($options['limit'])) {
+            $limit = intval($options['limit']);
+        }
+
+        $sql = $this->dbWrapper->createSql();
+
+        $select = $sql->select()
+            ->from(['sharedSpace' => self::SHARED_SPACE])
+            ->where([
+                new Like('sharedSpace.name', '%' . $fullOrPartialName . '%')
+            ])
+            ->columns([
+                'sharedSpaceId'   => 'id',
+                'sharedSpaceName' => 'name',
+                'created',
+                'lpaCount' => new Expression(
+                    '(SELECT COUNT(DISTINCT id) FROM ' . ApplicationData::APPLICATIONS_TABLE . ' WHERE "sharedSpaceId" = "sharedSpace"."id")'
+                ),
+                'memberCount' => new Expression(
+                    '(SELECT COUNT(DISTINCT "userId") FROM ' . self::SHARED_SPACE_MEMBERS . ' WHERE "sharedSpaceId" = "sharedSpace"."id")'
+                ),
+                'total' => new Expression('COUNT(*) OVER()'),
+            ])
+            ->order('sharedSpace.name ASC')
+            ->offset($offset)
+            ->limit($limit);
+
+        $rows = iterator_to_array($sql->prepareStatementForSqlObject($select)->execute(), false);
+
+        return [
+            'results' => array_map(fn ($value) => [
+                'sharedSpaceId' => $value['sharedSpaceId'],
+                'sharedSpaceName' => $value['sharedSpaceName'],
+                'created' => new DateTime($value['created']),
+                'lpaCount' => $value['lpaCount'],
+                'memberCount' => $value['memberCount'],
+            ], $rows),
+            'total' => empty($rows) ? 0 : (int) reset($rows)['total'],
+        ];
     }
 
     /**

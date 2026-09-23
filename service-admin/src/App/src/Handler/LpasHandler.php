@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\RequestAttributes;
-use App\Service\User\UserService;
+use App\Service\UserService;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Laminas\Diactoros\Response\HtmlResponse;
 
 /**
  * As this class is instantiated via autowiring and referenced only by class

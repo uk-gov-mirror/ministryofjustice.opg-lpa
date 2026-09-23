@@ -6,13 +6,13 @@ namespace AppTest\Handler;
 
 use App\Handler\LpasHandler;
 use App\RequestAttributes;
-use App\Service\User\UserService;
+use App\Service\UserService;
 use Fig\Http\Message\RequestMethodInterface;
 use Laminas\Diactoros\ServerRequest;
 use MakeShared\DataModel\User\User;
-use PHPUnit\Framework\TestCase;
 use Mezzio\Template\TemplateRendererInterface;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 class LpasHandlerTest extends TestCase

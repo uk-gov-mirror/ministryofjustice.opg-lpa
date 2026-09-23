@@ -142,4 +142,15 @@ interface SharedSpaceRepositoryInterface
      * Returns the number of members in a shared space.
      */
     public function countMembers(string $sharedSpaceId): int;
+
+    /**
+     * Returns shared spaces whose names match the given full or partial name,
+     * along with the total number of matching shared spaces (ignoring
+     * offset/limit), to support pagination.
+     *
+     * @param string $fullOrPartialName The full or partial name to match against.
+     * @param array $options Optional parameters for filtering and sorting the results.
+     * @return array{results: array, total: int}
+     */
+    public function matchSharedSpaces(string $fullOrPartialName, array $options = []): array;
 }

@@ -6,11 +6,11 @@ namespace App\Handler;
 
 use App\Form\UserFind;
 use App\RequestAttributes;
-use App\Service\User\UserService;
+use App\Service\UserService;
 use Fig\Http\Message\RequestMethodInterface;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Laminas\Diactoros\Response\HtmlResponse;
 
 /**
  * As this class is instantiated via autowiring and referenced only by class
@@ -63,10 +63,6 @@ class UserFindHandler extends AbstractHandler
 
         $users = [];
 
-        // we fetch one more record than we need so we can tell whether we
-        // should display a "next" link
-        $fakeLimit = $limit + 1;
-
         if ($request->getMethod() == RequestMethodInterface::METHOD_GET) {
             $params = $request->getQueryParams();
 
@@ -89,22 +85,23 @@ class UserFindHandler extends AbstractHandler
         }
 
         if (!is_null($query)) {
-            $options = ['query' => $query, 'offset' => $offset, 'limit' => $fakeLimit];
+            $options = ['query' => $query, 'offset' => $offset, 'limit' => $limit];
 
             $result = $this->userService->match($options);
-            $numResults = count($result);
+            $users = $result['results'];
+            $total = $result['total'];
 
             // there are more records to come after these...
-            if ($numResults === $fakeLimit) {
+            if ($offset + $limit < $total) {
                 $nextOffset = $offset + $limit;
             }
 
             // we are on page 2+
             if ($offset > 0) {
-                $previousOffset = $offset - $limit;
+                $previousOffset = max(0, $offset - $limit);
             }
 
-            if ($numResults === 0) {
+            if (count($users) === 0) {
                 $formMessages = $form->getMessages();
 
                 // Set error message
@@ -116,11 +113,6 @@ class UserFindHandler extends AbstractHandler
 
                 $form->setMessages($messages);
             } else {
-                // we want the actual number of users asked for in the query,
-                // so remove the one retrieved for the purposes of determining
-                // if there are more results to come
-                $users = array_slice($result, 0, $limit);
-
                 $this->auditLog(
                     $request->getAttribute(RequestAttributes::USER_EMAIL),
                     'admin.user.find',

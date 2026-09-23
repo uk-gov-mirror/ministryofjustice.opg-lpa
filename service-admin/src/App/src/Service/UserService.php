@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Service\User;
+namespace App\Service;
 
 use App\Service\ApiClient\Client as ApiClient;
-use MakeShared\DataModel\User\User;
 use DateTime;
 use DateTimeZone;
 use Exception;
+use MakeShared\DataModel\User\User;
 use Psr\Log\LoggerInterface;
 
 class UserService
@@ -163,14 +163,22 @@ class UserService
         }
     }
 
+    /**
+     * @param array $params See UserData.matchUsers() options ('query',
+     * 'offset', 'limit')
+     * @return array{results: array, total: int}
+     */
     public function match(array $params): array
     {
-        $users = $this->client->httpGet('/v2/admin/match-users', $params);
+        $response = $this->client->httpGet('/v2/admin/match-users', $params);
 
-        if (!is_array($users)) {
-            return [];
+        if (!is_array($response) || !isset($response['results']) || !is_array($response['results'])) {
+            return ['results' => [], 'total' => 0];
         }
 
-        return array_map(fn ($user) => $this->convertDates($user), $users);
+        return [
+            'results' => array_map(fn ($user) => $this->convertDates($user), $response['results']),
+            'total' => intval($response['total'] ?? 0),
+        ];
     }
 }

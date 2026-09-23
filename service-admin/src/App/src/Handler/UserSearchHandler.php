@@ -6,22 +6,24 @@ namespace App\Handler;
 
 use App\Form\UserSearch;
 use App\RequestAttributes;
-use App\Service\User\UserService;
+use App\Service\SharedSpaceService;
+use App\Service\UserService;
 use Fig\Http\Message\RequestMethodInterface;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Laminas\Diactoros\Response\HtmlResponse;
 
 /**
- * As this class is instantiated via autowiring and referenced only by class
- * name in routes.php, psalm doesn't think it's used. Suppress this
- * misunderstanding.
  * @psalm-suppress UnusedClass
  */
 class UserSearchHandler extends AbstractHandler
 {
-    public function __construct(private readonly UserService $userService)
-    {
+    public static int $LIMIT = 20;
+
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly SharedSpaceService $sharedSpaceService
+    ) {
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
@@ -30,72 +32,116 @@ class UserSearchHandler extends AbstractHandler
             'csrf' => $request->getAttribute(RequestAttributes::CSRF_TOKEN),
         ]);
 
-        $user = null;
-        $email = '';
+        $limit = self::$LIMIT;
 
-        if ($request->getMethod() === RequestMethodInterface::METHOD_GET) {
-            $queryParams = $request->getQueryParams();
+        // to be set from GET
+        $searchTerm = null;
+        $searchType = null;
 
-            if (isset($queryParams['email'])) {
-                $email = (string)$queryParams['email'];
+        // default offset
+        $offset = 0;
+
+        // next/previous params
+        $nextOffset = null;
+        $previousOffset = null;
+
+        $results = null;
+
+        if ($request->getMethod() == RequestMethodInterface::METHOD_GET) {
+            $params = $request->getQueryParams();
+
+            if (array_key_exists('searchTerm', $params)) {
+                $form->setData($params);
+
+                if ($form->isValid()) {
+                    $inputFilter = $form->getInputFilter();
+                    $searchTerm = $inputFilter->getValue('searchTerm');
+                    $searchType = $inputFilter->getValue('searchType');
+                    $offset = $inputFilter->getValue('offset');
+                }
+            } else {
+                // reset this to empty string for display as form element value
+                $params['searchTerm'] = '';
+
+                $params['offset'] = $offset;
+
+                $form->setData($params);
             }
-
-            $form->setData(['email' => $email]);
         }
 
-        if ($request->getMethod() === RequestMethodInterface::METHOD_POST) {
-            $parsedBody = $request->getParsedBody();
+        if (!is_null($searchTerm)) {
+            $input = trim($searchTerm);
 
-            if (!is_array($parsedBody)) {
-                $parsedBody = [];
-            }
+            // userId/aReference lookups return a single record (or false if
+            // not found); the other search types return a paginated list
+            // along with the total number of matching records
+            $paginated = !in_array($searchType, ['userId', 'aReference'], true);
 
-            $form->setData($parsedBody);
-            $email = $form->get('email')->getValue();
-            $searchType = $form->get('searchType')->getValue();
+            $result = match ($searchType) {
+                'userId'          => $this->userService->searchById($input),
+                'aReference'      => $this->userService->searchByAReference($input),
+                'sharedSpaceName' => $this->sharedSpaceService->matchSharedSpaces(
+                    $input,
+                    ['offset' => $offset, 'limit' => $limit]
+                ),
+                default           => $this->userService->match(['query' => $input, 'offset' => $offset, 'limit' => $limit]),
+            };
 
-            if ($email !== null && $form->isValid()) {
-                $input = trim($email);
+            if ($result === false) {
+                $formMessages = $form->getMessages();
 
-                $result = match ($searchType) {
-                    'userId'     => $this->userService->searchById($input),
-                    'aReference' => $this->userService->searchByAReference($input),
-                    default      => $this->userService->search($input),
+                $notFoundMessage = match ($searchType) {
+                    'userId'          => 'No user found for user ID',
+                    'aReference'      => 'No user found for A Reference',
+                    'sharedSpaceName' => 'No shared space found for shared space name',
+                    default           => 'No user found for email address',
                 };
 
-                if ($result === false) {
-                    $formMessages = $form->getMessages();
+                // Set error message
+                $messages = array_merge($formMessages, [
+                    'searchTerm' => [
+                        $notFoundMessage
+                    ]
+                ]);
 
-                    $notFoundMessage = match ($searchType) {
-                        'userId'     => 'No user found for user ID',
-                        'aReference' => 'No user found for A Reference',
-                        default      => 'No user found for email address',
-                    };
+                $form->setMessages($messages);
+            } else {
+                if ($paginated) {
+                    $results = $result['results'];
+                    $total = $result['total'];
 
-                    // Set error message
-                    $messages = array_merge($formMessages, [
-                        'email' => [
-                            $notFoundMessage
-                        ]
-                    ]);
+                    // there are more records to come after these...
+                    if ($offset + $limit < $total) {
+                        $nextOffset = $offset + $limit;
+                    }
 
-                    $form->setMessages($messages);
+                    // we are on page 2+
+                    if ($offset > 0) {
+                        $previousOffset = max(0, $offset - $limit);
+                    }
                 } else {
-                    $user = $result;
-
-                    $this->auditLog(
-                        $request->getAttribute(RequestAttributes::USER_EMAIL),
-                        'admin.user.search',
-                        'Admin viewed user data',
-                        ['searched_for' => $input],
-                    );
+                    // wrap the single record so the template can treat all
+                    // search types as a list of results
+                    $results = [$result];
                 }
+
+                $this->auditLog(
+                    $request->getAttribute(RequestAttributes::USER_EMAIL),
+                    'admin.user.search',
+                    'Admin viewed user data',
+                    ['searched_for' => $input],
+                );
             }
         }
 
         return new HtmlResponse($this->getTemplateRenderer()->render('app::user-search', [
             'form'  => $form,
-            'user'  => $user,
+            'results'  => $results,
+            'searchTerm' => $form->get('searchTerm')->getValue(),
+            'searchType' => $form->get('searchType')->getValue(),
+            'secret' => $form->get('secret')->getValue(),
+            'nextOffset' => $nextOffset,
+            'previousOffset' => $previousOffset,
         ]));
     }
 }

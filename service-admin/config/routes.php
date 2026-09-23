@@ -20,4 +20,5 @@ return function (Application $app, MiddlewareFactory $factory, ContainerInterfac
     $app->route('/user-find', App\Handler\UserFindHandler::class, ['GET', 'POST'], 'user.find');
     $app->get('/user/{userId}/lpas', App\Handler\LpasHandler::class, 'user.lpas');
     $app->get('/shared-space/{sharedSpaceId}/lpas', App\Handler\LpasHandler::class, 'shared-space.lpas');
+    $app->get('/shared-space/{sharedSpaceId}/members', App\Handler\LpasHandler::class, 'shared-space.members');
 };
