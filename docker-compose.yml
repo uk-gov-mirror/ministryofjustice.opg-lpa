@@ -56,7 +56,7 @@ services:
 
   localstack:
     container_name: lpa-localstack
-    image: localstack/localstack:4.14.0@sha256:3ebc37595918b8accb852f8048fef2aff047d465167edd655528065b07bc364a
+    image: ministackorg/ministack:1.5@sha256:21dd9d52bd1e3308b55e5205945963eb024398f69e874ecc329f76783da01e62
     depends_on:
       dynamodb:
         condition: service_started
@@ -88,9 +88,13 @@ services:
     networks:
       default:
         aliases:
-          - sqs.eu-west-1.localhost.localstack.cloud
+          - sqs.eu-west-1.localhost.ministack.cloud
     healthcheck:
-      test: ["CMD", "curl", "http://localhost:4566/_localstack/health?reload"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
 
   # ---------------------------
   # Front
@@ -469,7 +473,7 @@ services:
       XDEBUG_SESSION: 1
 
       OPG_LPA_COMMON_S3_ENDPOINT: http://localstack:4566
-      OPG_LPA_COMMON_PDF_QUEUE_URL: http://sqs.eu-west-1.localhost.localstack.cloud:4566/000000000000/pdf-queue.fifo
+      OPG_LPA_COMMON_PDF_QUEUE_URL: http://localstack:4566/000000000000/pdf-queue.fifo
 
       PHP_IDE_CONFIG: serverName=lpa-pdf-app
 
